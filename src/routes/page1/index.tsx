@@ -1,9 +1,11 @@
-import { component$, Slot, useSignal } from '@builder.io/qwik';
+import { component$,  useContext, useContextProvider, useSignal, useTask$ } from '@builder.io/qwik';
+import { searchContextId } from '~/context/search-context-id';
 
 export default component$(() => {
 
   const searchSignal = useSignal('');
   
+  useContextProvider(searchContextId, {searchSignal, colorDefault: 'white'});
 
   return <div>
     This is Page 1
@@ -18,13 +20,27 @@ export default component$(() => {
     
     <hr />
     
-    <Projector content={searchSignal.value}>
-      {searchSignal.value}
-    </Projector>
+    <Projector/>
+      
   </div>
 });
 
 
-export const Projector = component$(({content}: {content: string}) => {
-  return <div>You typed: <Slot/></div>;
+export const Projector = component$(() => {
+
+  const {searchSignal, colorDefault} = useContext(searchContextId);
+
+  const color = useSignal(colorDefault);
+
+  useTask$(({track}) => {
+    track(() => searchSignal.value);
+    if (searchSignal.value === 'llama') {
+      color.value = 'red';
+      return;
+    }else {
+
+      color.value = 'white';
+    }
+  });
+  return <div>You typed: <span style={{backgroundColor: color.value}}>{searchSignal.value}</span></div>;
 });
